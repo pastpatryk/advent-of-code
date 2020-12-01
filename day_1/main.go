@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"time"
 )
 
 func check(err error) {
@@ -45,6 +46,8 @@ func readNumbers(reader io.Reader) ([]int, error) {
 }
 
 func findSum(numbers []int, sum int) (int, int, int) {
+	defer timeTrack(time.Now(), "findSum")
+
 	for i, n1 := range numbers {
 		if n1 > sum {
 			continue
@@ -61,4 +64,9 @@ func findSum(numbers []int, sum int) (int, int, int) {
 		}
 	}
 	return 0, 0, 0
+}
+
+func timeTrack(start time.Time, name string) {
+	elapsed := time.Since(start)
+	fmt.Printf("%s took %s\n", name, elapsed)
 }
