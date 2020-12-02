@@ -22,8 +22,8 @@ type passwordPolicy struct {
 }
 
 func (p passwordPolicy) isValid(password string) bool {
-	count := strings.Count(password, p.letter)
-	return p.min <= count && count <= p.max
+	char := p.letter[0]
+	return (password[p.min-1] == char) != (password[p.max-1] == char)
 }
 
 type passwordDefinition struct {
