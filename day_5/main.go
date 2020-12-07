@@ -21,9 +21,9 @@ func main() {
 	seats, err := readSeats(file)
 	check(err)
 
-	row, col, max := findEmptySeat(seats)
+	findEmptySeat(seats)
 	// id := 8*row + col
-	fmt.Printf("Seat %d: [%d, %d]\n", max, row, col)
+	// fmt.Printf("Seat %d: [%d, %d]\n", max, row, col)
 }
 
 func readSeats(reader io.Reader) ([]string, error) {
@@ -58,7 +58,7 @@ func binarySearch(code string, from, to int) (int, int) {
 	return binarySearch(code[1:], mid+1, to)
 }
 
-func findEmptySeat(seats []string) (int, int, int) {
+func findEmptySeat(seats []string) {
 	max := 0
 	var occupied [128][8]bool
 	for _, seat := range seats {
@@ -70,12 +70,13 @@ func findEmptySeat(seats []string) (int, int, int) {
 			max = id
 		}
 	}
+	var freeSeatsIds []int
 	for r := range occupied {
 		for c := range occupied[r] {
 			if !occupied[r][c] {
-				fmt.Printf("Free: %d, %d\n", r, c)
+				freeSeatsIds = append(freeSeatsIds, r*8+c)
+				fmt.Printf("%d\n", r*8+c)
 			}
 		}
 	}
-	return -1, -1, max
 }
