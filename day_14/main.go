@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -25,21 +26,51 @@ type Instruction struct {
 
 // Mask ...
 type Mask struct {
-	zeroes int
-	ones   int
+	zeroes      int
+	ones        int
+	floatingPos []int
 }
 
 // Apply ...
 func (m *Mask) Apply(number int) int {
 	number |= m.ones
-	number &= ^m.zeroes
+	// number &= ^m.zeroes
 	return number
+}
+
+// MemoryAdresses generates all possible memeory adresses
+func (m *Mask) MemoryAdresses(address int) []int {
+	combinations := powerSet(m.floatingPos)
+	var addresses []int
+	for _, combination := range combinations {
+		newAddress := address
+		for pos, flag := range combination {
+			if flag {
+				newAddress = setBit(newAddress, uint(pos))
+			} else {
+				newAddress = clearBit(newAddress, uint(pos))
+			}
+		}
+		addresses = append(addresses, m.Apply(newAddress))
+	}
+	return addresses
+}
+
+func setBit(n int, pos uint) int {
+	n |= (1 << pos)
+	return n
+}
+
+func clearBit(n int, pos uint) int {
+	return n &^ (1 << pos)
 }
 
 func main() {
 	file, err := os.Open("./input.txt")
 	check(err)
 	defer file.Close()
+
+	fmt.Printf("Powerset: %v\n", powerSet([]int{1, 2}))
 
 	instructions, err := readInstructions(file)
 	check(err)
@@ -58,13 +89,16 @@ func main() {
 
 func executeProgram(instructions []Instruction, memory map[int]int) {
 	currentMask := Mask{}
-	for _, inst := range instructions {
+	for i, inst := range instructions {
 		switch inst.op {
 		case "mask":
 			currentMask = inst.mask
 		case "mem":
-			fmt.Printf("Writing to mem[%d] = %d (%d)\n", inst.arg, currentMask.Apply(inst.val), inst.val)
-			memory[inst.arg] = currentMask.Apply(inst.val)
+			addresses := currentMask.MemoryAdresses(inst.arg)
+			for _, address := range addresses {
+				fmt.Printf("[%d] Writing to mem[%d](%d) = %d\n", i, address, inst.arg, inst.val)
+				memory[address] = inst.val
+			}
 		}
 	}
 }
@@ -112,12 +146,14 @@ func parseInstruction(text string) (Instruction, error) {
 
 func parseMask(text string) Mask {
 	mask := Mask{}
-	for _, char := range text {
+	for i, char := range text {
 		switch char {
 		case '1':
 			mask.ones |= 1
 		case '0':
 			mask.zeroes |= 1
+		case 'X':
+			mask.floatingPos = append(mask.floatingPos, len(text)-i-1)
 		}
 		mask.ones <<= 1
 		mask.zeroes <<= 1
@@ -125,4 +161,21 @@ func parseMask(text string) Mask {
 	mask.ones >>= 1
 	mask.zeroes >>= 1
 	return mask
+}
+
+func powerSet(original []int) []map[int]bool {
+	powerSetSize := int(math.Pow(2, float64(len(original))))
+	result := make([]map[int]bool, 0, powerSetSize)
+
+	var index int
+	for index < powerSetSize {
+		subSet := make(map[int]bool, len(original))
+
+		for j, elem := range original {
+			subSet[elem] = index&(1<<uint(j)) > 0
+		}
+		result = append(result, subSet)
+		index++
+	}
+	return result
 }
