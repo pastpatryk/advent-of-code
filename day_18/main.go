@@ -49,9 +49,30 @@ func (e Expression) String() string {
 
 // Eval calculates result of the expression
 func (e Expression) Eval() int {
-	result := e[0].Eval()
-	op := e[0].op
-	for _, val := range e[1:] {
+	fmt.Printf("Exp before: %v\n", e)
+
+	newExp := Expression{}
+	for i := 0; i < len(e); i++ {
+		val := e[i]
+		if val.op == '+' {
+			nextVal := e[i+1]
+			newVal := Value{num: val.Eval() + nextVal.Eval(), op: nextVal.op}
+			if newVal.op == '+' {
+				e[i+1] = newVal
+			} else {
+				newExp = append(newExp, newVal)
+				i++
+			}
+		} else {
+			newExp = append(newExp, val)
+		}
+	}
+
+	fmt.Printf("Exp after: %v\n", newExp)
+
+	result := newExp[0].Eval()
+	op := newExp[0].op
+	for _, val := range newExp[1:] {
 		switch op {
 		case '+':
 			result += val.Eval()
