@@ -19,12 +19,7 @@ defmodule AOC do
   def stream_file(name \\ "input.txt") do
     File.stream!(name)
     |> Enum.filter(&(&1 != ""))
-    |> Stream.map(&parse_line/1)
-  end
-
-  def parse_line(line) do
-    {num, _} = Integer.parse(line)
-    num
+    |> Stream.map(&String.to_integer/1)
   end
 end
 
